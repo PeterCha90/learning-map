@@ -64,7 +64,7 @@ The description is one sentence, in the learner's own reasoning, plain words. Un
    python3 ~/.claude/skills/learning-map/scripts/render.py ~/.buzz/RESEARCH/learning-maps/<TOPIC>.map.md
    ```
    Writes `<TOPIC>.map.html` next to the md (or `-o OUT.html`). Prints `learned/total`.
-4. Open it: `open -a "ego lite" <file>.html`. Also works as a plain file in VS Code (Live Preview / Open in browser) and in Orca's browser. No server, no CDN, no install.
+4. Open it only when the user asks to see the map/HTML: `open -a "ego lite" <file>.html`. Also works as a plain file in VS Code (Live Preview / Open in browser) and in Orca's browser. No server, no CDN, no install.
 
 ## With socratic-tutor
 
@@ -72,6 +72,7 @@ This file replaces socratic-tutor's "save state" / "resume from:" paste block.
 
 - Session start: if the map exists, read it and continue from `next_question`. Skip the diagnostic.
 - "save state": update the map and reply with its path.
+- "show progress" / "현재 상태 보여줘": reply with socratic-tutor's ASCII skill map only. Don't open the HTML. Keep re-rendering it after changes; just don't launch it.
 - Moving to a tool that can't read your files: paste the `.map.md` itself.
 
 ## Common mistakes
