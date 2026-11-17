@@ -64,7 +64,7 @@ The description is one sentence, in the learner's own reasoning, plain words. Un
    python3 ~/.claude/skills/learning-map/scripts/render.py ~/.buzz/RESEARCH/learning-maps/<TOPIC>.map.md
    ```
    Writes `<TOPIC>.map.html` next to the md (or `-o OUT.html`). Prints `learned/total`.
-4. Open it only when the user asks to see the map/HTML: `open -a "ego lite" <file>.html`. Also works as a plain file in VS Code (Live Preview / Open in browser) and in Orca's browser. No server, no CDN, no install.
+4. Open it only when the user asks to see the map/HTML: the user's default browser: `open <file>.html` (macOS), `xdg-open <file>.html` (Linux), `start <file>.html` (Windows). Also works as a plain file in VS Code (Live Preview / Open in browser) and in Orca's browser. No server, no CDN, no install.
 
 ## With socratic-tutor
 
