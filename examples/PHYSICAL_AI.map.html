@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical AI · 역량지도</title>
+<style>
+:root{
+  --bg:#f7f7f5; --panel:#fff; --ink:#1f2328; --muted:#8b9096; --line:#c9ced6;
+  --root:#1f2937; --branch:#ffffff; --branch-bd:#d5d9df;
+  --ok:#16a34a; --ok-ink:#fff; --no:#e6e8eb; --no-ink:#9aa0a6;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#16181c; --panel:#202329; --ink:#e8eaed; --muted:#8b9096; --line:#454b55;
+    --root:#e8eaed; --branch:#2a2e35; --branch-bd:#3a3f48; --no:#2c3037; --no-ink:#7d838c; }
+  .n.root{ color:#16181c !important; }
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+  font-family:"Pretendard","Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
+header{position:sticky;top:0;z-index:5;display:flex;gap:16px;align-items:center;flex-wrap:wrap;
+  padding:12px 20px;background:var(--panel);border-bottom:1px solid var(--branch-bd)}
+header h1{font-size:18px;margin:0}
+.meta{font-size:13px;color:var(--muted)}
+.bar{width:160px;height:8px;border-radius:99px;background:var(--no);overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.legend{font-size:13px;color:var(--muted);display:flex;gap:12px;align-items:center}
+.legend b{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:4px}
+button{font:inherit;font-size:13px;border:1px solid var(--branch-bd);background:var(--branch);color:var(--ink);
+  border-radius:8px;padding:5px 10px;cursor:pointer}
+button:hover{border-color:var(--ok)}
+.spacer{flex:1}
+#stage{position:relative;overflow:hidden;height:calc(100% - 58px);cursor:grab;touch-action:none}
+#stage.drag{cursor:grabbing}
+#canvas{position:absolute;left:0;top:0;transform-origin:0 0}
+#ctrl{position:fixed;right:20px;bottom:20px;display:flex;flex-direction:column;gap:6px;z-index:4}
+#ctrl button{width:38px;height:38px;padding:0;font-size:18px;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+#zoomPct{font-size:11px;color:var(--muted);text-align:center}
+svg{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+path{fill:none;stroke:var(--line);stroke-width:1.6;transition:d .45s cubic-bezier(.2,.8,.2,1),opacity .3s}
+.n{position:absolute;white-space:nowrap;border-radius:10px;padding:8px 14px;font-size:15px;line-height:1.3;
+  cursor:pointer;user-select:none;transition:left .45s cubic-bezier(.2,.8,.2,1),top .45s cubic-bezier(.2,.8,.2,1),
+  box-shadow .2s, transform .15s}
+.n:hover{box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.n:active{transform:scale(.97)}
+.n.root{background:var(--root);color:#fff;font-weight:700;font-size:17px;padding:10px 18px}
+.n.branch{background:var(--branch);border:1.5px solid var(--branch-bd);font-weight:650}
+.n.ok{background:var(--ok);color:var(--ok-ink);font-weight:600}
+.n.no{background:var(--no);color:var(--no-ink)}
+.n.sel{outline:2.5px solid #f59e0b;outline-offset:2px}
+.n .cnt{font-size:12px;margin-left:8px;color:var(--ok);font-weight:700}
+.n .lvl{font-size:11px;margin-left:6px;color:var(--muted);font-weight:500}
+.n .tg{display:inline-grid;place-items:center;width:18px;height:18px;margin-left:8px;border-radius:50%;
+  font-size:11px;background:rgba(127,127,127,.18);vertical-align:1px}
+.n.hidden{display:none}
+.pop{animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+@keyframes pop{0%{opacity:0;transform:scale(.3) translateX(-24px)}100%{opacity:1;transform:none}}
+#card{position:fixed;right:76px;bottom:20px;width:min(360px,calc(100% - 96px));background:var(--panel);
+  border:1px solid var(--branch-bd);border-radius:14px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.15);
+  transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s}
+#card.on{transform:none;opacity:1;pointer-events:auto}
+#card h3{margin:0 0 6px;font-size:16px}
+#card .st{font-size:12px;font-weight:700;margin-bottom:8px}
+#card p{margin:0;font-size:14px;line-height:1.6}
+#card .x{position:absolute;right:10px;top:8px;border:0;background:none;font-size:16px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){ .pop{animation:none} .n,path{transition:none} }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title"></h1>
+  <span class="meta" id="meta"></span>
+  <div class="bar"><i id="barfill" style="width:0"></i></div>
+  <span class="meta" id="score"></span>
+  <span class="legend"><span><b style="background:var(--ok)"></b>알게 된 개념</span><span><b style="background:var(--no)"></b>아직 모르는 개념</span></span>
+  <span class="spacer"></span>
+  <button id="openAll">모두 펼치기</button>
+  <button id="closeAll">모두 접기</button>
+</header>
+<div id="stage"><div id="canvas"><svg id="edges"></svg></div></div>
+<div id="ctrl">
+  <button id="zIn" title="확대">＋</button>
+  <button id="zOut" title="축소">－</button>
+  <div id="zoomPct">100%</div>
+  <button id="zFit" title="화면에 맞추기">⤢</button>
+  <button id="png" title="전체 지도 PNG 다운로드">⤓</button>
+</div>
+<div id="card"><button class="x" id="cardX">✕</button><h3 id="cardT"></h3><div class="st" id="cardS"></div><p id="cardD"></p></div>
+<script>
+const DATA = {"meta": {"title": "Physical AI", "learner": "Peter", "updated": "2026-11-18", "tags": "[physical-ai, socratic-learning, learning-map]", "status": "active", "created": "2026-11-18"}, "root": {"label": "Physical AI", "children": [{"label": "Physical AI란? (vs 일반 AI)", "kind": "branch", "children": [{"label": "몸이 있는 AI", "desc": "ChatGPT는 몸이 없고, Physical AI는 로봇이라는 몸으로 현실에서 움직인다.", "learned": true, "kind": "concept", "children": []}, {"label": "물리적 실수의 대가", "desc": "로봇 팔이 판단을 틀리면 컵을 깨거나 떨어뜨린다. \"다시 해줘\"로 되돌릴 수 없다.", "learned": true, "kind": "concept", "children": []}, {"label": "기존 로봇과의 차이", "desc": "정해진 규칙만 하는 로봇 vs 처음 보는 상황에도 일반화하는 로봇", "learned": false, "kind": "concept", "children": []}], "level": 2}, {"label": "감지→판단→행동 루프", "kind": "branch", "children": [{"label": "카메라와 좌표 인식", "desc": "좌표는 누가 넣어주지 않는다. 로봇이 카메라로 보고 자기 위치 기준으로 알아낸다.", "learned": true, "kind": "concept", "children": []}, {"label": "오픈 루프의 한계", "desc": "딱 한 번 보고 움직이면, 도중에 컵이 옮겨져도 모른 채 허공을 잡는다.", "learned": true, "kind": "concept", "children": []}, {"label": "클로즈드 루프", "desc": "움직이는 동안에도 계속 보고 다시 계산해야 한다.", "learned": true, "kind": "concept", "children": []}, {"label": "지연과 연산의 트레이드오프", "desc": "", "learned": false, "kind": "concept", "children": [{"label": "큰 모델은 느리다", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "빠른 반사 + 느린 계획", "desc": "", "learned": false, "kind": "concept", "children": []}]}], "level": 2}, {"label": "월드 모델", "kind": "branch", "children": [{"label": "내부 시뮬레이터", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "행동 전에 결과 예측", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "필수인가?", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 1}, {"label": "학습법: 시뮬레이션·Sim2Real", "kind": "branch", "children": [{"label": "시뮬레이션의 한계", "desc": "시뮬레이션에서 99% 성공해도 현실에서 떨어진다. 가정한 환경과 실제 환경이 다르기 때문.", "learned": true, "kind": "concept", "children": []}, {"label": "무엇이 다른가 (마찰·무게·조명·센서 노이즈)", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "차이를 줄이는 방법", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "데이터 수집 병목", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 2}, {"label": "로봇 파운데이션 모델 (VLA)", "kind": "branch", "children": [{"label": "입력: 카메라 영상 + 말 지시", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "출력: 팔 동작", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "대표 모델 (π0, RT-2)", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 1}, {"label": "안전·불확실성", "kind": "branch", "children": [{"label": "되돌릴 수 없는 실수 막기", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "모를 때 멈추기 (불확실성 추정)", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 1}], "kind": "root"}};
+const COL_GAP = 90, ROW = 50, PAD = 40;
+const canvas = document.getElementById('canvas'), svg = document.getElementById('edges');
+let uid = 0, selected = null;
+
+function prep(n, depth, parent){
+  n.id = uid++; n.depth = depth; n.parent = parent;
+  n.open = depth === 0;                       // start: only branches visible
+  n.children.forEach(c => prep(c, depth + 1, n));
+  if (n.kind !== 'concept'){
+    const all = []; (function walk(x){ x.children.forEach(c => { all.push(c); walk(c); }); })(n);
+    const cs = all.filter(c => c.kind === 'concept'); n.total = cs.length; n.done = cs.filter(c => c.learned).length;
+  }
+}
+prep(DATA.root, 0, null);
+
+function build(n){
+  const el = document.createElement('div');
+  el.className = 'n hidden ' + (n.kind === 'root' ? 'root' : n.kind === 'branch' ? 'branch' : (n.learned ? 'ok' : 'no'));
+  let h = (n.kind === 'concept' && n.learned ? '✔ ' : '') + esc(n.label);
+  if (n.kind === 'branch'){
+    h += `<span class="cnt">${n.done}/${n.total}</span>`;
+    if (n.level != null) h += `<span class="lvl">Lv ${n.level}/5</span>`;
+  }
+  if (n.children.length) h += `<span class="tg"></span>`;
+  el.innerHTML = h;
+  el.onclick = e => { e.stopPropagation(); onNode(n); };
+  canvas.appendChild(el); n.el = el;
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  svg.appendChild(p); n.path = p;
+  n.children.forEach(build);
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+build(DATA.root);
+
+function visible(n, out = []){ out.push(n); if (n.open) n.children.forEach(c => visible(c, out)); return out; }
+
+function layout(popIds = new Set()){
+  const vis = visible(DATA.root), shown = new Set(vis);
+  // reveal first so widths can be measured
+  (function all(n){ n.el.classList.toggle('hidden', !shown.has(n)); n.path.style.opacity = shown.has(n) && n.parent ? 1 : 0; n.children.forEach(all); })(DATA.root);
+  const colW = [];
+  vis.forEach(n => { colW[n.depth] = Math.max(colW[n.depth] || 0, n.el.offsetWidth); });
+  const colX = [PAD]; for (let d = 1; d < colW.length; d++) colX[d] = colX[d-1] + colW[d-1] + COL_GAP;
+  let y = PAD;
+  (function place(n){
+    const kids = n.open ? n.children : [];
+    if (!kids.length){ n.y = y; y += ROW; }
+    else { kids.forEach(place); n.y = (kids[0].y + kids[kids.length-1].y) / 2; }
+    n.x = colX[n.depth];
+  })(DATA.root);
+  let maxX = 0;
+  vis.forEach(n => {
+    n.el.style.left = n.x + 'px';
+    n.el.style.top = (n.y - n.el.offsetHeight / 2) + 'px';
+    maxX = Math.max(maxX, n.x + n.el.offsetWidth);
+    const t = n.el.querySelector('.tg'); if (t) t.textContent = n.open ? '‹' : '›';
+    if (popIds.has(n.id)){ n.el.classList.remove('pop'); void n.el.offsetWidth; n.el.classList.add('pop'); }
+    if (n.parent){
+      const p = n.parent, x1 = p.x + p.el.offsetWidth, y1 = p.y, x2 = n.x, y2 = n.y, mx = (x1 + x2) / 2;
+      n.path.setAttribute('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`);
+    }
+  });
+  canvas.style.width = (maxX + PAD * 2) + 'px';
+  canvas.style.height = (y + PAD) + 'px';
+}
+
+function onNode(n){
+  if (n.children.length){
+    n.open = !n.open;
+    const pop = new Set(); if (n.open) n.children.forEach(c => pop.add(c.id));
+    layout(pop);
+  }
+  if (n.kind === 'concept') showCard(n); else hideCard();
+}
+function showCard(n){
+  if (selected) selected.el.classList.remove('sel');
+  selected = n; n.el.classList.add('sel');
+  document.getElementById('cardT').textContent = n.label;
+  const s = document.getElementById('cardS');
+  s.textContent = n.learned ? '✔ 알게 된 개념' : '아직 모르는 개념'; s.style.color = n.learned ? 'var(--ok)' : 'var(--muted)';
+  document.getElementById('cardD').textContent = n.desc || (n.learned ? '(설명 없음)' : '아직 튜터링에서 다루지 않았어요.');
+  document.getElementById('card').classList.add('on');
+}
+function hideCard(){ document.getElementById('card').classList.remove('on'); if (selected) selected.el.classList.remove('sel'); selected = null; }
+document.getElementById('cardX').onclick = hideCard;
+
+function setAll(v){ (function w(n){ if (n.children.length) n.open = v || n.depth === 0; n.children.forEach(w); })(DATA.root); layout(); }
+document.getElementById('openAll').onclick = () => setAll(true);
+document.getElementById('closeAll').onclick = () => setAll(false);
+
+const r = DATA.root, m = DATA.meta;
+document.getElementById('title').textContent = r.label;
+document.getElementById('meta').textContent = [m.learner, m.updated].filter(Boolean).join(' · ');
+document.getElementById('score').textContent = `${r.done}/${r.total} 알게 됨`;
+requestAnimationFrame(() => { document.getElementById('barfill').style.width = (r.total ? r.done / r.total * 100 : 0) + '%'; });
+const pop0 = new Set(r.children.map(c => c.id));
+layout(pop0);
+
+// ---- pan & zoom -------------------------------------------------------
+const stage = document.getElementById('stage');
+let view = { x: 0, y: 0, k: 1 };
+const MIN_K = 0.2, MAX_K = 3;
+function apply(){
+  canvas.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`;
+  document.getElementById('zoomPct').textContent = Math.round(view.k * 100) + '%';
+}
+function zoomAt(factor, cx, cy){
+  const k = Math.min(MAX_K, Math.max(MIN_K, view.k * factor));
+  view.x = cx - (cx - view.x) * (k / view.k);
+  view.y = cy - (cy - view.y) * (k / view.k);
+  view.k = k; apply();
+}
+function zoomCenter(f){ const r = stage.getBoundingClientRect(); zoomAt(f, r.width / 2, r.height / 2); }
+function fit(){
+  const r = stage.getBoundingClientRect();
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
+  view.k = Math.min(1, (r.width - 40) / w, (r.height - 40) / h);
+  view.x = (r.width - w * view.k) / 2; view.y = (r.height - h * view.k) / 2; apply();
+}
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  const r = stage.getBoundingClientRect();
+  // trackpad pinch arrives as ctrl+wheel; plain wheel also zooms, like Gemini's map
+  zoomAt(Math.exp(-e.deltaY * (e.ctrlKey ? 0.01 : 0.0015)), e.clientX - r.left, e.clientY - r.top);
+}, { passive: false });
+const ptrs = new Map(); let moved = 0, pinch0 = null;
+stage.addEventListener('pointerdown', e => {
+  if (e.target.closest('.n')) return;          // nodes keep their click
+  stage.setPointerCapture(e.pointerId);
+  ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY }); moved = 0;
+  stage.classList.add('drag');
+});
+stage.addEventListener('pointermove', e => {
+  if (!ptrs.has(e.pointerId)) return;
+  const prev = ptrs.get(e.pointerId), cur = { x: e.clientX, y: e.clientY };
+  ptrs.set(e.pointerId, cur);
+  if (ptrs.size === 2){
+    const [a, b] = [...ptrs.values()], d = Math.hypot(a.x - b.x, a.y - b.y);
+    const r = stage.getBoundingClientRect();
+    if (pinch0) zoomAt(d / pinch0, (a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top);
+    pinch0 = d; moved += 10; return;
+  }
+  view.x += cur.x - prev.x; view.y += cur.y - prev.y;
+  moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y); apply();
+});
+function up(e){
+  if (!ptrs.has(e.pointerId)) return;
+  ptrs.delete(e.pointerId); pinch0 = null;
+  if (!ptrs.size){ stage.classList.remove('drag'); if (moved < 4) hideCard(); }
+}
+stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
+document.getElementById('zIn').onclick = () => zoomCenter(1.25);
+document.getElementById('zOut').onclick = () => zoomCenter(0.8);
+document.getElementById('zFit').onclick = fit;
+document.addEventListener('keydown', e => {
+  if (e.key === '+' || e.key === '=') zoomCenter(1.25);
+  else if (e.key === '-') zoomCenter(0.8);
+  else if (e.key === '0') fit();
+});
+requestAnimationFrame(() => { const r = stage.getBoundingClientRect();
+  if (canvas.offsetWidth > r.width || canvas.offsetHeight > r.height) fit(); else apply(); });
+
+// ---- PNG export: whole map, every node expanded -----------------------
+function exportPNG(){
+  const saved = new Map(); (function w(n){ saved.set(n, n.open); n.children.forEach(w); })(DATA.root);
+  (function w(n){ if (n.children.length) n.open = true; n.children.forEach(w); })(DATA.root);
+  layout();                                     // n.x / n.y are final values, not mid-transition
+  const vis = visible(DATA.root), S = 2, HEAD = 70, PADX = 40;
+  const W = canvas.offsetWidth + PADX, H = canvas.offsetHeight + HEAD;
+  const cv = document.createElement('canvas'); cv.width = W * S; cv.height = H * S;
+  const g = cv.getContext('2d'); g.scale(S, S);
+  const css = getComputedStyle(document.documentElement), v = k => css.getPropertyValue(k).trim();
+  g.fillStyle = v('--bg'); g.fillRect(0, 0, W, H);
+  const fam = getComputedStyle(document.body).fontFamily;
+  g.textBaseline = 'middle';
+  g.fillStyle = v('--ink'); g.font = `700 22px ${fam}`; g.fillText(r.label, 40, 34);
+  let tx = 40 + g.measureText(r.label).width + 16;
+  g.font = `500 14px ${fam}`; g.fillStyle = v('--muted');
+  const sub = [m.learner, m.updated, `${r.done}/${r.total} 알게 됨`].filter(Boolean).join(' · ');
+  g.fillText(sub, tx, 35);
+  g.save(); g.translate(0, HEAD - PAD + 10);
+  g.strokeStyle = v('--line'); g.lineWidth = 1.6;
+  vis.forEach(n => { if (!n.parent) return;
+    const p = n.parent, x1 = p.x + p.el.offsetWidth, mx = (x1 + n.x) / 2;
+    g.beginPath(); g.moveTo(x1, p.y); g.bezierCurveTo(mx, p.y, mx, n.y, n.x, n.y); g.stroke(); });
+  vis.forEach(n => {
+    const cs = getComputedStyle(n.el), w = n.el.offsetWidth, h = n.el.offsetHeight, y0 = n.y - h / 2;
+    g.beginPath(); g.roundRect(n.x, y0, w, h, 10);
+    g.fillStyle = cs.backgroundColor; g.fill();
+    if (parseFloat(cs.borderTopWidth)) { g.strokeStyle = cs.borderTopColor; g.lineWidth = parseFloat(cs.borderTopWidth); g.stroke(); }
+    let x = n.x + parseFloat(cs.paddingLeft);
+    for (const part of n.el.childNodes){
+      if (part.nodeType === 3){ g.font = `${cs.fontWeight} ${cs.fontSize} ${fam}`; g.fillStyle = cs.color;
+        g.fillText(part.textContent, x, n.y); x += g.measureText(part.textContent).width; }
+      else if (!part.classList.contains('tg')){
+        const ps = getComputedStyle(part); x += parseFloat(ps.marginLeft);
+        g.font = `${ps.fontWeight} ${ps.fontSize} ${fam}`; g.fillStyle = ps.color;
+        g.fillText(part.textContent, x, n.y + 1); x += g.measureText(part.textContent).width;
+      }
+    }
+  });
+  g.restore();
+  saved.forEach((o, n) => { n.open = o; }); layout();
+  cv.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = `${r.label.replace(/[\\/:*?"<>|]/g, '_')}_역량지도.png`;
+    document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }, 'image/png');
+}
+document.getElementById('png').onclick = exportPNG;
+</script>
+</body>
+</html>
