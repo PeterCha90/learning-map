@@ -188,7 +188,7 @@ layout(pop0);
 
 // ---- pan & zoom -------------------------------------------------------
 const stage = document.getElementById('stage');
-let view = { x: 0, y: 0, k: 1 };
+let view = { x: 0, y: 0, k: 1 }, touched = false;  // stop auto-fitting once the user moves the view
 const MIN_K = 0.2, MAX_K = 3;
 function apply(){
   canvas.style.transform = `translate(${view.x}px,${view.y}px) scale(${view.k})`;
@@ -198,13 +198,13 @@ function zoomAt(factor, cx, cy){
   const k = Math.min(MAX_K, Math.max(MIN_K, view.k * factor));
   view.x = cx - (cx - view.x) * (k / view.k);
   view.y = cy - (cy - view.y) * (k / view.k);
-  view.k = k; apply();
+  view.k = k; touched = true; apply();
 }
 function zoomCenter(f){ const r = stage.getBoundingClientRect(); zoomAt(f, r.width / 2, r.height / 2); }
-function fit(){
+function fit(maxK = 1){
   const r = stage.getBoundingClientRect();
   const w = canvas.offsetWidth, h = canvas.offsetHeight;
-  view.k = Math.min(1, (r.width - 40) / w, (r.height - 40) / h);
+  view.k = Math.max(MIN_K, Math.min(maxK, (r.width - 80) / w, (r.height - 80) / h));
   view.x = (r.width - w * view.k) / 2; view.y = (r.height - h * view.k) / 2; apply();
 }
 stage.addEventListener('wheel', e => {
@@ -231,7 +231,7 @@ stage.addEventListener('pointermove', e => {
     pinch0 = d; moved += 10; return;
   }
   view.x += cur.x - prev.x; view.y += cur.y - prev.y;
-  moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y); apply();
+  moved += Math.abs(cur.x - prev.x) + Math.abs(cur.y - prev.y); touched = true; apply();
 });
 function up(e){
   if (!ptrs.has(e.pointerId)) return;
@@ -241,14 +241,15 @@ function up(e){
 stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 document.getElementById('zIn').onclick = () => zoomCenter(1.25);
 document.getElementById('zOut').onclick = () => zoomCenter(0.8);
-document.getElementById('zFit').onclick = fit;
+document.getElementById('zFit').onclick = () => fit(1.6);
 document.addEventListener('keydown', e => {
   if (e.key === '+' || e.key === '=') zoomCenter(1.25);
   else if (e.key === '-') zoomCenter(0.8);
-  else if (e.key === '0') fit();
+  else if (e.key === '0') fit(1.6);
 });
-requestAnimationFrame(() => { const r = stage.getBoundingClientRect();
-  if (canvas.offsetWidth > r.width || canvas.offsetHeight > r.height) fit(); else apply(); });
+// open centered and scaled to the window; small maps grow up to 160% so they don't float in empty space
+requestAnimationFrame(() => fit(1.6));
+window.addEventListener('resize', () => { if (!touched) fit(1.6); });
 
 // ---- PNG export: whole map, every node expanded -----------------------
 function exportPNG(){

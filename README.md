@@ -49,7 +49,7 @@ The map only marks a concept green after you've answered it, predicted it, or ex
 | ----- | ------ |
 | Mouse wheel / trackpad pinch | Zoom toward the cursor (20%–300%) |
 | Drag the background | Pan |
-| `+` `-` `0` | Zoom in, zoom out, fit to screen |
+| `+` `-` `0` | Zoom in, zoom out, fit to screen (the map also opens centered and fitted) |
 | `⤓` | Download the whole map as a 2x PNG, every node expanded |
 | `모두 펼치기` / `모두 접기` | Expand all / collapse all |
 

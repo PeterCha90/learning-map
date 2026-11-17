@@ -7,7 +7,7 @@ description: Use when the user wants a 역량지도, skill map, competency map, 
 
 One `.map.md` file is the source of truth for a learner's map of a topic. `scripts/render.py` turns it into one offline `.html` mindmap: click a node and its sub-concepts pop out, click a concept to see its description. Learned = green, not yet known = gray.
 
-In the HTML: wheel or trackpad pinch zooms toward the cursor, drag the background to pan, bottom-right buttons zoom in/out, fit to screen (keys `+` `-` `0`), and ⤓ downloads the whole map, every node expanded, as a 2x PNG.
+In the HTML: the map opens centered and sized to the window. Wheel or trackpad pinch zooms toward the cursor, drag the background to pan, bottom-right buttons zoom in/out, fit to screen (keys `+` `-` `0`), and ⤓ downloads the whole map, every node expanded, as a 2x PNG.
 
 ## File format (`<TOPIC>.map.md`)
 
