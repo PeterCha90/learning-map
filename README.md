@@ -36,7 +36,7 @@ examples/PHYSICAL_AI.map.html  (6/21 learned, 6 branches)
 | ------- | ----------- |
 | `Root` | The topic you're learning |
 | `Branch  3/6  Lv 2/5` | One subskill: concepts learned / total, and its socratic-tutor level |
-| `✔ Concept` (green) | Something you showed you know. Click it to see a one-line description in your own words |
+| `✔ Concept` (green) | Something you showed you know. Click it and a dashed note pops out to its right with a one-line description in your own words. Click again, or anywhere else, to close |
 | `Concept` (gray) | Something you don't know yet |
 | `›` / `‹` | Click to expand or collapse sub-concepts, to any depth |
 | Progress bar | Learned concepts across the whole map |

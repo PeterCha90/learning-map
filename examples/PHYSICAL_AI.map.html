@@ -55,14 +55,15 @@ path{fill:none;stroke:var(--line);stroke-width:1.6;transition:d .45s cubic-bezie
 .n.hidden{display:none}
 .pop{animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
 @keyframes pop{0%{opacity:0;transform:scale(.3) translateX(-24px)}100%{opacity:1;transform:none}}
-#card{position:fixed;right:76px;bottom:20px;width:min(360px,calc(100% - 96px));background:var(--panel);
-  border:1px solid var(--branch-bd);border-radius:14px;padding:16px 18px;box-shadow:0 10px 30px rgba(0,0,0,.15);
-  transform:translateY(20px);opacity:0;pointer-events:none;transition:.25s}
-#card.on{transform:none;opacity:1;pointer-events:auto}
-#card h3{margin:0 0 6px;font-size:16px}
-#card .st{font-size:12px;font-weight:700;margin-bottom:8px}
-#card p{margin:0;font-size:14px;line-height:1.6}
-#card .x{position:absolute;right:10px;top:8px;border:0;background:none;font-size:16px;color:var(--muted)}
+.dn{position:absolute;display:none;width:max-content;max-width:320px;white-space:normal;word-break:keep-all;border-radius:10px;padding:10px 14px;
+  font-size:14px;line-height:1.55;background:var(--panel);color:var(--ink);border:1.5px dashed var(--ok);
+  box-shadow:0 6px 18px rgba(0,0,0,.14);z-index:3;cursor:default}
+.dn.on{display:block}
+.dn.gray{border-color:var(--muted)}
+.dn b{display:block;font-size:12px;color:var(--ok);margin-bottom:3px}
+.dn.gray b{color:var(--muted)}
+#dpath{fill:none;stroke:var(--ok);stroke-width:1.6;stroke-dasharray:5 4;transition:none}
+#dpath.gray{stroke:var(--muted)}
 @media (prefers-reduced-motion: reduce){ .pop{animation:none} .n,path{transition:none} }
 </style>
 </head>
@@ -85,7 +86,6 @@ path{fill:none;stroke:var(--line);stroke-width:1.6;transition:d .45s cubic-bezie
   <button id="zFit" title="화면에 맞추기">⤢</button>
   <button id="png" title="전체 지도 PNG 다운로드">⤓</button>
 </div>
-<div id="card"><button class="x" id="cardX">✕</button><h3 id="cardT"></h3><div class="st" id="cardS"></div><p id="cardD"></p></div>
 <script>
 const DATA = {"meta": {"title": "Physical AI", "learner": "Peter", "updated": "2026-11-18", "tags": "[physical-ai, socratic-learning, learning-map]", "status": "active", "created": "2026-11-18"}, "root": {"label": "Physical AI", "children": [{"label": "Physical AI란? (vs 일반 AI)", "kind": "branch", "children": [{"label": "몸이 있는 AI", "desc": "ChatGPT는 몸이 없고, Physical AI는 로봇이라는 몸으로 현실에서 움직인다.", "learned": true, "kind": "concept", "children": []}, {"label": "물리적 실수의 대가", "desc": "로봇 팔이 판단을 틀리면 컵을 깨거나 떨어뜨린다. \"다시 해줘\"로 되돌릴 수 없다.", "learned": true, "kind": "concept", "children": []}, {"label": "기존 로봇과의 차이", "desc": "정해진 규칙만 하는 로봇 vs 처음 보는 상황에도 일반화하는 로봇", "learned": false, "kind": "concept", "children": []}], "level": 2}, {"label": "감지→판단→행동 루프", "kind": "branch", "children": [{"label": "카메라와 좌표 인식", "desc": "좌표는 누가 넣어주지 않는다. 로봇이 카메라로 보고 자기 위치 기준으로 알아낸다.", "learned": true, "kind": "concept", "children": []}, {"label": "오픈 루프의 한계", "desc": "딱 한 번 보고 움직이면, 도중에 컵이 옮겨져도 모른 채 허공을 잡는다.", "learned": true, "kind": "concept", "children": []}, {"label": "클로즈드 루프", "desc": "움직이는 동안에도 계속 보고 다시 계산해야 한다.", "learned": true, "kind": "concept", "children": []}, {"label": "지연과 연산의 트레이드오프", "desc": "", "learned": false, "kind": "concept", "children": [{"label": "큰 모델은 느리다", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "빠른 반사 + 느린 계획", "desc": "", "learned": false, "kind": "concept", "children": []}]}], "level": 2}, {"label": "월드 모델", "kind": "branch", "children": [{"label": "내부 시뮬레이터", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "행동 전에 결과 예측", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "필수인가?", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 1}, {"label": "학습법: 시뮬레이션·Sim2Real", "kind": "branch", "children": [{"label": "시뮬레이션의 한계", "desc": "시뮬레이션에서 99% 성공해도 현실에서 떨어진다. 가정한 환경과 실제 환경이 다르기 때문.", "learned": true, "kind": "concept", "children": []}, {"label": "무엇이 다른가 (마찰·무게·조명·센서 노이즈)", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "차이를 줄이는 방법", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "데이터 수집 병목", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 2}, {"label": "로봇 파운데이션 모델 (VLA)", "kind": "branch", "children": [{"label": "입력: 카메라 영상 + 말 지시", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "출력: 팔 동작", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "대표 모델 (π0, RT-2)", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 1}, {"label": "안전·불확실성", "kind": "branch", "children": [{"label": "되돌릴 수 없는 실수 막기", "desc": "", "learned": false, "kind": "concept", "children": []}, {"label": "모를 때 멈추기 (불확실성 추정)", "desc": "", "learned": false, "kind": "concept", "children": []}], "level": 1}], "kind": "root"}};
 const COL_GAP = 90, ROW = 50, PAD = 40;
@@ -152,6 +152,7 @@ function layout(popIds = new Set()){
   });
   canvas.style.width = (maxX + PAD * 2) + 'px';
   canvas.style.height = (y + PAD) + 'px';
+  placeDesc(false);
 }
 
 function onNode(n){
@@ -160,19 +161,46 @@ function onNode(n){
     const pop = new Set(); if (n.open) n.children.forEach(c => pop.add(c.id));
     layout(pop);
   }
-  if (n.kind === 'concept') showCard(n); else hideCard();
+  // leaves show their description; nodes with children just expand, so the note never covers them
+  if (n.kind === 'concept' && !n.children.length) showDesc(n); else hideDesc();
 }
-function showCard(n){
-  if (selected) selected.el.classList.remove('sel');
+// description = a temporary dashed node attached to the right of the clicked concept
+const dn = document.createElement('div'); dn.className = 'dn'; canvas.appendChild(dn);
+dn.onclick = e => e.stopPropagation();
+dn.onpointerdown = e => e.stopPropagation();
+const dpath = document.createElementNS('http://www.w3.org/2000/svg', 'path'); dpath.id = 'dpath'; svg.appendChild(dpath);
+function placeDesc(pop){
+  const n = selected; if (!n) return;
+  if (n.el.classList.contains('hidden')){ hideDesc(); return; }
+  const gap = 46, x1 = n.x + n.el.offsetWidth, x2 = x1 + gap;
+  dn.style.left = x2 + 'px'; dn.style.top = (n.y - dn.offsetHeight / 2) + 'px';
+  dpath.setAttribute('d', `M${x1},${n.y} L${x2},${n.y}`);
+  if (pop){ dn.classList.remove('pop'); void dn.offsetWidth; dn.classList.add('pop'); keepInView(); }
+}
+function keepInView(){
+  // slide the view just enough that the note isn't cut off by the window edge
+  const st = document.getElementById('stage').getBoundingClientRect();
+  const right = view.x + (parseFloat(dn.style.left) + dn.offsetWidth) * view.k, over = right - (st.width - 70);
+  if (over > 0){ canvas.style.transition = 'transform .35s cubic-bezier(.2,.8,.2,1)'; view.x -= over; apply();
+    setTimeout(() => { canvas.style.transition = ''; }, 400); }
+}
+function showDesc(n){
+  if (selected === n){ hideDesc(); return; }          // click again to close
+  hideDesc();
+  if (!n.desc && !n.learned) return;                  // nothing to say about an untouched gray concept
   selected = n; n.el.classList.add('sel');
-  document.getElementById('cardT').textContent = n.label;
-  const s = document.getElementById('cardS');
-  s.textContent = n.learned ? '✔ 알게 된 개념' : '아직 모르는 개념'; s.style.color = n.learned ? 'var(--ok)' : 'var(--muted)';
-  document.getElementById('cardD').textContent = n.desc || (n.learned ? '(설명 없음)' : '아직 튜터링에서 다루지 않았어요.');
-  document.getElementById('card').classList.add('on');
+  const gray = !n.learned;
+  dn.classList.toggle('gray', gray); dpath.classList.toggle('gray', gray);
+  dn.innerHTML = `<b>${gray ? '아직 모르는 개념' : '✔ 알게 된 개념'}</b>`;
+  dn.appendChild(document.createTextNode(n.desc || '(설명 없음)'));
+  dn.classList.add('on'); dpath.style.display = '';
+  placeDesc(true);
 }
-function hideCard(){ document.getElementById('card').classList.remove('on'); if (selected) selected.el.classList.remove('sel'); selected = null; }
-document.getElementById('cardX').onclick = hideCard;
+function hideDesc(){
+  dn.classList.remove('on'); dpath.style.display = 'none';
+  if (selected) selected.el.classList.remove('sel'); selected = null;
+}
+hideDesc();
 
 function setAll(v){ (function w(n){ if (n.children.length) n.open = v || n.depth === 0; n.children.forEach(w); })(DATA.root); layout(); }
 document.getElementById('openAll').onclick = () => setAll(true);
@@ -236,7 +264,7 @@ stage.addEventListener('pointermove', e => {
 function up(e){
   if (!ptrs.has(e.pointerId)) return;
   ptrs.delete(e.pointerId); pinch0 = null;
-  if (!ptrs.size){ stage.classList.remove('drag'); if (moved < 4) hideCard(); }
+  if (!ptrs.size){ stage.classList.remove('drag'); if (moved < 4) hideDesc(); }
 }
 stage.addEventListener('pointerup', up); stage.addEventListener('pointercancel', up);
 document.getElementById('zIn').onclick = () => zoomCenter(1.25);
