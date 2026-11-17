@@ -5,6 +5,11 @@ updated: 2026-11-18
 tags: [physical-ai, socratic-learning, learning-map]
 status: active
 created: 2026-11-18
+target: "4/5 on every branch"
+next_question: "카메라로 1초에 1000번 보고, 매번 거대 AI 모델로 다시 판단하면 완벽한 로봇일까? 뭐가 문제일까? (지연·연산 트레이드오프로 유도)"
+misconceptions: "VLA 입력을 좌표로 생각함(실제: 카메라 영상+말 지시) / 한 번 본 로봇이 멈춘다고 했다가 교정됨"
+notes: "2번 3/5 승급 조건: closed-loop을 힌트 없이 한 번 더 맞히기 / open-loop·closed-loop 용어는 튜터가 붙여준 이름(Peter가 스스로 말한 건 개념까지) / 4번: 무엇이 다른지(마찰·무게·조명·센서 노이즈)는 아직 안 나옴"
+notebook: "https://notebook.google.com/notebook/40d5cf01-ce66-40c3-9399-2e8772b54c4d"
 ---
 # Physical AI
 

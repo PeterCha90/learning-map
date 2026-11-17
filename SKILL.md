@@ -35,6 +35,20 @@ updated: 2026-11-18
 
 Separator between label and description: ` — ` (also accepts ` -- ` or ` :: `).
 
+### Tutoring state (frontmatter)
+
+The map is also the tutoring session's saved state, so a new session resumes from the file with nothing pasted.
+
+| Key | Holds |
+|---|---|
+| `updated` | Date of the last change |
+| `target` | Goal level, e.g. `"4/5 on every branch"` |
+| `next_question` | The question waiting for an answer when the session stopped |
+| `misconceptions` | Wrong ideas the learner showed, and whether they've been corrected |
+| `notes` | Grading notes: what a level-up still needs, which terms the tutor only named |
+
+Quote every value. The renderer ignores these keys; they're for the tutor.
+
 ## Rules for `[x]`
 
 Mark `[x]` only when the learner showed it themselves: they answered it, predicted it, or explained it without being handed the answer (same bar as socratic-tutor levels). A concept you only named or explained stays `[ ]`.
@@ -44,13 +58,21 @@ The description is one sentence, in the learner's own reasoning, plain words. Un
 ## Workflow
 
 1. Map file lives at `~/.buzz/RESEARCH/learning-maps/<TOPIC>.map.md` unless the user names another place. Create it with every subskill as a `##` branch and the concepts under each, all `[ ]` at first.
-2. After each tutoring check the learner passes: flip that concept to `[x]`, write the description, update `[n/5]` and `updated:`.
+2. After each tutoring check the learner passes, in the same turn: flip that concept to `[x]`, write the description, update `[n/5]`, `updated`, and any of `next_question` / `misconceptions` / `notes` that changed.
 3. Render:
    ```bash
    python3 ~/.claude/skills/learning-map/scripts/render.py ~/.buzz/RESEARCH/learning-maps/<TOPIC>.map.md
    ```
    Writes `<TOPIC>.map.html` next to the md (or `-o OUT.html`). Prints `learned/total`.
 4. Open it: `open -a "ego lite" <file>.html`. Also works as a plain file in VS Code (Live Preview / Open in browser) and in Orca's browser. No server, no CDN, no install.
+
+## With socratic-tutor
+
+This file replaces socratic-tutor's "save state" / "resume from:" paste block.
+
+- Session start: if the map exists, read it and continue from `next_question`. Skip the diagnostic.
+- "save state": update the map and reply with its path.
+- Moving to a tool that can't read your files: paste the `.map.md` itself.
 
 ## Common mistakes
 
@@ -60,5 +82,6 @@ The description is one sentence, in the learner's own reasoning, plain words. Un
 | Concept line missing `[ ]` / `[x]` | Every concept needs a checkbox, or the parser skips it. |
 | `- [x]` before any `##` | Concepts must sit under a branch. |
 | Marking `[x]` right after you explained it | Wait for an unprompted check the learner passes. |
+| Session ends with `next_question` stale | Write the pending question before you stop. Resume starts from it. |
 | Tabs and spaces mixed in indents | Use 2 spaces per level. |
 | PNG button does nothing in VS Code's built-in preview | Webviews can block downloads. Open the file in a real browser for export. |
